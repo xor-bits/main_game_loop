@@ -28,6 +28,7 @@ struct Gamepad {
     axis: HashMap<Axis, f32>,
 }
 
+// TODO : runtime name to scancode binding
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(u32)]
 pub enum Input {
@@ -68,6 +69,8 @@ pub enum Input {
     /// R in most QWERTY keyboards
     ///
     /// DPad in most gamepads
+    ///
+    /// WARN: same key as `Reload`
     RollUp,
     /// F in most QWERTY keyboards
     ///
@@ -93,7 +96,13 @@ pub enum Input {
     /// R in most QWERTY keyboards
     ///
     /// West/☐/X in most gamepads
+    ///
+    /// WARN: same key as `RollUp`
     Reload,
+    /// I in most QWERTY keyboards
+    ///
+    /// North/Δ/X in most gamepads
+    Inventory,
 
     /// LShift in most QWERTY keyboards
     ///
@@ -215,6 +224,7 @@ impl Input {
             Input::Jump => 57,
             Input::Crouch => 42,
             Input::Reload => 19,
+            Input::Inventory => 23,
 
             Input::Accelerate => 42,
             Input::Decelerate => 29,
@@ -251,6 +261,7 @@ impl Input {
             Input::Jump => Button::South,
             Input::Crouch => Button::East,
             Input::Reload => Button::West,
+            Input::Inventory => Button::North,
 
             Input::Accelerate => Button::RightTrigger2,
             Input::Decelerate => Button::LeftTrigger2,
@@ -287,6 +298,7 @@ impl Input {
             Input::Jump => Axis::Unknown,
             Input::Crouch => Axis::Unknown,
             Input::Reload => Axis::Unknown,
+            Input::Inventory => Axis::Unknown,
 
             Input::Accelerate => Axis::RightZ,
             Input::Decelerate => Axis::LeftZ,
@@ -323,6 +335,7 @@ impl Input {
             Input::Jump => false,
             Input::Crouch => false,
             Input::Reload => false,
+            Input::Inventory => false,
 
             Input::Accelerate => false,
             Input::Decelerate => true,
