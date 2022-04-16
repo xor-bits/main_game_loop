@@ -1,14 +1,15 @@
+use gilrs::{Gilrs, GilrsBuilder};
 use report::Reporter;
 use std::{
-    time::{Duration, Instant},  ops::{Deref, DerefMut},
+    ops::{Deref, DerefMut},
+    time::{Duration, Instant},
 };
 use winit::{
     dpi::PhysicalPosition,
-    event::{ WindowEvent},
+    event::WindowEvent,
     event_loop::{ControlFlow, EventLoop},
     window::Window,
 };
-use gilrs::{ Gilrs, GilrsBuilder};
 
 //
 
@@ -17,22 +18,63 @@ pub use winit::event::Event as WinitEvent;
 
 //
 
-pub mod report;
 pub mod io;
+pub mod report;
 
 //
 
 pub trait Runnable<E: AnyEngine + 'static> {
+    type InitInput;
+
+    /// Gets called once right after calling `run` with the `GameLoop`.
+    #[allow(unused_variables)]
+    fn init(input: Self::InitInput) -> Self;
+
+    /// Gets called 60 times per second.
+    ///
+    /// Physics should be updated here.
+    /// Animations belong to `draw`.
+    ///
+    /// TODO: configurable with `Interval`
     #[allow(unused_variables)]
     fn update(&mut self, gl: &mut GameLoop<E>) {}
 
+    /// Gets called whenever an event was received.
+    ///
+    /// Events can be window/keyboard/mouse events
+    /// (`WinitEvent`) or gamepad events (`GilrsEvent`)
+    ///
+    /// TODO: combine gamepad events into
+    /// window/keyboard/mouse events when winit
+    /// supports gamepad events.
     #[allow(unused_variables)]
     fn event(&mut self, gl: &mut GameLoop<E>, event: &Event) {
-        if let Event::WinitEvent(WinitEvent::WindowEvent { event: WindowEvent::CloseRequested, ..}) = event {
+        if let Event::WinitEvent(WinitEvent::WindowEvent {
+            event: WindowEvent::CloseRequested,
+            ..
+        }) = event
+        {
             gl.stop();
         }
     }
 
+    /// Gets called with a frame when the window
+    /// should be drawn.
+    ///
+    /// `delta` param is used to smooth animations
+    /// between updates. It is a value in range
+    /// `0.0..1.0`. Close to `0.0` means that an
+    /// update happened just recently. Close to
+    /// `1.0` means that an update will happen
+    /// soon.
+    ///
+    /// Example usage with `delta`:
+    /// ```no_run
+    /// fn draw(&mut self, gl: &mut GameLoop<E>, frame: &mut E::Frame, delta: f32) {
+    ///     let position = self.position + self.velocity * delta;
+    ///     draw_quad(position);
+    /// }
+    /// ```
     #[allow(unused_variables)]
     fn draw(&mut self, gl: &mut GameLoop<E>, frame: &mut E::Frame, delta: f32) {}
 }
@@ -90,7 +132,7 @@ pub enum Event<'e> {
     GilrsEvent(GilrsEvent),
 
     /// Window/Keyboard/Cursor/Device events
-    WinitEvent(WinitEvent<'e, ()>)
+    WinitEvent(WinitEvent<'e, ()>),
 }
 
 //
@@ -100,12 +142,17 @@ impl<E: AnyEngine + 'static> GameLoop<E> {
         let frame_reporter = Reporter::new_with_interval(Duration::from_secs_f32(5.0));
         let update_reporter = Reporter::new_with_interval(Duration::from_secs_f32(5.0));
 
-        let gilrs = match GilrsBuilder::new().add_included_mappings(true).add_env_mappings(true).with_default_filters(true).build() {
+        let gilrs = match GilrsBuilder::new()
+            .add_included_mappings(true)
+            .add_env_mappings(true)
+            .with_default_filters(true)
+            .build()
+        {
             Ok(gilrs) => Some(gilrs),
             Err(err) => {
                 log::error!("Failed to init gilrs: {err}. Gamepad input will be ignored.");
                 None
-            },
+            }
         };
 
         let window = engine.get_window();
@@ -142,7 +189,14 @@ impl<E: AnyEngine + 'static> GameLoop<E> {
         self.stop = true
     }
 
-    pub fn run(mut self, mut app: impl Runnable<E> + 'static) -> ! {
+    pub fn run<A>(mut self, input: <A as Runnable<E>>::InitInput) -> !
+    where
+        A: Runnable<E> + 'static,
+    {
+        let init_timer = Instant::now();
+        let mut app = A::init(input);
+        log::info!("Init took: {:?}", init_timer.elapsed());
+
         let mut previous = Instant::now();
         let mut lag = Duration::from_secs_f64(0.0);
 
@@ -205,7 +259,6 @@ impl<E: AnyEngine + 'static> GameLoop<E> {
                         // frames
                         let timer = self.frame_reporter.begin();
                         {
-                            
                             let mut frame = self.engine.get_frame();
                             let delta = lag.as_secs_f32() / self.interval.as_secs_f32();
                             app.draw(
