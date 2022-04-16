@@ -1,4 +1,4 @@
-use gilrs::{Axis, Button, Event as GilrsEvent, EventType, GamepadId, Gilrs};
+use gilrs::{Axis, Button, Event as GilrsEvent, EventType, GamepadId};
 use glam::Vec2;
 use std::collections::{hash_map::Entry, HashMap};
 use winit::event::{

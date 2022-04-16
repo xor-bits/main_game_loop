@@ -1,6 +1,6 @@
 use report::Reporter;
 use std::{
-    time::{Duration, Instant}, cell::Ref, ops::{Deref, DerefMut},
+    time::{Duration, Instant},  ops::{Deref, DerefMut},
 };
 use winit::{
     dpi::PhysicalPosition,
@@ -42,7 +42,7 @@ pub trait AnyEngine: Sized {
     fn get_frame(&mut self) -> Self::Frame;
     fn finish_frame(&mut self, frame: Self::Frame);
 
-    fn get_window(&self) -> Ref<'_, Window>;
+    fn get_window(&self) -> &Window;
 
     fn build_game_loop(self) -> GameLoop<Self> {
         GameLoop::new(self)
@@ -111,7 +111,6 @@ impl<E: AnyEngine + 'static> GameLoop<E> {
         let window = engine.get_window();
         let scale_factor = window.scale_factor();
         let size = window.inner_size().to_logical(scale_factor);
-        drop(window);
 
         let size = (size.width, size.height);
         let aspect = size.0 / size.1;

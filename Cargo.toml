@@ -5,16 +5,10 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[features]
-default = []
-gl = ["glium"]
-
 [dependencies]
 winit = "0.26.1"
 log = "0.4.16"
 glam = "0.20.3"
-
-glium = { version = "0.31.0", optional = true }
 
 # sdl2 = "0.35.2"
 gilrs = "0.8.2"
