@@ -1,3 +1,7 @@
+#![feature(associated_type_defaults)]
+
+//
+
 use gilrs::{Gilrs, GilrsBuilder};
 use report::Reporter;
 use std::{
@@ -23,12 +27,13 @@ pub mod report;
 
 //
 
-pub trait Runnable<E: AnyEngine + 'static> {
-    type InitInput;
-
+pub trait Runnable<E: AnyEngine + 'static>
+where
+    Self: Sized,
+{
     /// Gets called once right after calling `run` with the `GameLoop`.
     #[allow(unused_variables)]
-    fn init(input: Self::InitInput) -> Self;
+    fn init() -> Self;
 
     /// Gets called 60 times per second.
     ///
@@ -189,12 +194,12 @@ impl<E: AnyEngine + 'static> GameLoop<E> {
         self.stop = true
     }
 
-    pub fn run<A>(mut self, input: <A as Runnable<E>>::InitInput) -> !
+    pub fn run<A>(mut self) -> !
     where
         A: Runnable<E> + 'static,
     {
         let init_timer = Instant::now();
-        let mut app = A::init(input);
+        let mut app = A::init();
         log::info!("Init took: {:?}", init_timer.elapsed());
 
         let mut previous = Instant::now();
