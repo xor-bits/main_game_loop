@@ -22,7 +22,7 @@ struct App {
 }
 
 impl Runnable<Engine> for App {
-    fn init() -> Self {
+    fn init(_: &mut GameLoop<Engine>) -> Self {
         Self {
             vbo: VertexBuffer::new(),
 			shader: Shader::new(),

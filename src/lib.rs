@@ -33,7 +33,7 @@ where
 {
     /// Gets called once right after calling `run` with the `GameLoop`.
     #[allow(unused_variables)]
-    fn init() -> Self;
+    fn init(gl: &mut GameLoop<E>) -> Self;
 
     /// Gets called 60 times per second.
     ///
@@ -199,7 +199,7 @@ impl<E: AnyEngine + 'static> GameLoop<E> {
         A: Runnable<E> + 'static,
     {
         let init_timer = Instant::now();
-        let mut app = A::init();
+        let mut app = A::init(&mut self);
         log::info!("Init took: {:?}", init_timer.elapsed());
 
         let mut previous = Instant::now();
