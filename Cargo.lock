@@ -279,16 +279,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "00b0228411908ca8685dba7fc2cdd70ec9990a6e753e89b6ac91a84c40fbaf4b"
 
 [[package]]
-name = "game_loop"
-version = "0.1.0"
-dependencies = [
- "gilrs",
- "glam",
- "log",
- "winit",
-]
-
-[[package]]
 name = "gilrs"
 version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -433,6 +423,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "86dd2487cdfea56def77b88438a2c915fb45113c5319bfe7e14306ca4cd0b0e1"
 dependencies = [
  "libc",
+]
+
+[[package]]
+name = "main_game_loop"
+version = "0.1.0"
+dependencies = [
+ "gilrs",
+ "glam",
+ "log",
+ "winit",
 ]
 
 [[package]]
