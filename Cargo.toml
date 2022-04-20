@@ -1,6 +1,6 @@
 [package]
 name = "main_game_loop"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "A game loop with event handling"
 license = "MIT"

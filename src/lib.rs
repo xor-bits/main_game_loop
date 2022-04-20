@@ -1,4 +1,5 @@
 #![feature(associated_type_defaults)]
+#![feature(generic_associated_types)]
 
 //
 
@@ -89,7 +90,9 @@ pub trait AnyEngine: Sized {
     fn get_frame(&mut self) -> Self::Frame;
     fn finish_frame(&mut self, frame: Self::Frame);
 
-    fn get_window(&self) -> &Window;
+    fn use_window<F, T>(&self, f: F) -> T
+    where
+        F: FnOnce(&Window) -> T;
 
     fn build_game_loop(self) -> GameLoop<Self> {
         GameLoop::new(self)
@@ -160,9 +163,11 @@ impl<E: AnyEngine + 'static> GameLoop<E> {
             }
         };
 
-        let window = engine.get_window();
-        let scale_factor = window.scale_factor();
-        let size = window.inner_size().to_logical(scale_factor);
+        let (scale_factor, size) = engine.use_window(|window| {
+            let scale_factor = window.scale_factor();
+            let size = window.inner_size().to_logical(scale_factor);
+            (scale_factor, size)
+        });
 
         let size = (size.width, size.height);
         let aspect = size.0 / size.1;
@@ -205,7 +210,7 @@ impl<E: AnyEngine + 'static> GameLoop<E> {
         let mut previous = Instant::now();
         let mut lag = Duration::from_secs_f64(0.0);
 
-        self.engine.get_window().set_visible(true);
+        self.engine.use_window(|window| window.set_visible(true));
         let event_loop = self.engine.take_event_loop();
 
         event_loop.run(move |event, _, control| {
@@ -300,7 +305,7 @@ impl<E: AnyEngine + 'static> GameLoop<E> {
                         return;
                     }
                     WinitEvent::MainEventsCleared => {
-                        self.engine.get_window().request_redraw();
+                        self.engine.use_window(|window| window.request_redraw());
                     }
                     _ => {}
                 }
