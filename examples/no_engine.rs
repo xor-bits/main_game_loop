@@ -75,10 +75,6 @@ impl Engine {
 }
 
 impl AnyEngine for Engine {
-    type Frame = ();
-    fn get_frame(&mut self) -> Self::Frame {}
-    fn finish_frame(&mut self, _: Self::Frame) {}
-
     fn run<F>(mut self, f: F) -> !
     where
         F: FnOnce(Self) + Send + 'static,

@@ -11,23 +11,6 @@ use winit::{
 //
 
 pub trait AnyEngine: Sized {
-    type Frame;
-
-    /// Get a new frame from the game engine
-    ///
-    /// This is where the game engine user
-    /// should draw to
-    ///
-    /// No two frames should exist at the
-    /// same time
-    fn get_frame(&mut self) -> Self::Frame;
-
-    /// Finish a frame
-    ///
-    /// Game engine can for example: submit
-    /// the commands it got or something
-    fn finish_frame(&mut self, frame: Self::Frame);
-
     fn run<F>(self, f: F) -> !
     where
         F: FnOnce(Self) + Send + 'static;
