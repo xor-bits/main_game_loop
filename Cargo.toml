@@ -1,6 +1,6 @@
 [package]
 name = "main_game_loop"
-version = "0.1.1"
+version = "0.2.0"
 edition = "2021"
 description = "A game loop with event handling"
 license = "MIT"
@@ -14,3 +14,7 @@ glam = "0.20.3"
 
 # sdl2 = "0.35.2"
 gilrs = "0.8.2"
+
+
+[dev-dependencies]
+env_logger = "0.9.0"

@@ -95,6 +95,31 @@ impl Reporter {
         );
     } */
 
+    pub fn report_all(label: &str, reporters: &[(&'static str, &Self)]) -> String {
+        #[cfg(debug_assertions)]
+        const DEBUG: &str = "debug build";
+        #[cfg(not(debug_assertions))]
+        const DEBUG: &str = "release build";
+
+        let max_label_width = reporters
+            .iter()
+            .map(|(label, reporter)| label.len() + reporter.last_string().1.len())
+            .max()
+            .unwrap_or(0)
+            .max(7);
+        let padding = " ".repeat(max_label_width - 7);
+        let first = format!("Report {label} ({DEBUG})\n{padding}per second @ time per\n");
+
+        Some(first)
+            .into_iter()
+            .chain(reporters.iter().map(|(label, reporter)| {
+                let (int, per_sec) = reporter.last_string();
+                let padding = " ".repeat(max_label_width - label.len() - per_sec.len() + 1);
+                format!("{label}: {padding}{per_sec} @ {int}\n")
+            }))
+            .collect()
+    }
+
     pub fn reset(&mut self) {
         let avg = self.elapsed / self.count;
         let fps = self.count as f64 / self.report_interval.as_secs_f64();

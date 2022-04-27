@@ -11,30 +11,39 @@
 ### Example usage with some random `Engine`
 
 ```rust
-fn main() {
-	let engine = Engine::new();
-	engine.build_game_loop().run::<App>();
-}
+fn run(mut engine: Engine) {
+    let window = engine.create_window(WindowBuilder::new())unwrap();
+    let mut update_loop = UpdateLoop::new(UpdateRate::PerSecond(60));
 
-struct App {
-	vbo: VertexBuffer,
-	shader: Shader,
-}
+    loop {
+        if let Some(event) = engine.poll() {
+            event(event);
+        } else {
+            let delta = update_loop.update(|| {
+                update();
+            });
 
-impl Runnable<Engine> for App {
-    fn init(_: &mut GameLoop<Engine>) -> Self {
-        Self {
-            vbo: VertexBuffer::new(),
-			shader: Shader::new(),
+            draw();
+
+            if should_report {
+                log::debug!(
+                    "\n{}",
+                    Reporter::report_all(
+                        "5.0s",
+                        &[
+                            ("UPDATE", &update_report),
+                            ("FRAME", &frame_report),
+                            ("EVENT", &event_report),
+                        ],
+                    )
+                );
+            }
         }
     }
+}
 
-    fn draw(&mut self, gl: &mut GameLoop<Engine>, frame: &mut Frame, delta: f32) {
-        frame
-            .main_render_pass()
-            .bind_vbo(&self.vbo)
-            .bind_shader(&self.shader)
-            .draw(0..6, 0..1);
-    }
+fn main() {
+    env_logger::init();
+    Engine::new().run(run);
 }
 ```
