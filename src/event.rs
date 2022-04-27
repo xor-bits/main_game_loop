@@ -93,13 +93,17 @@ impl EventLoop {
                     let mut builder = WindowBuilder::default();
                     builder.window = config;
 
-                    window_sender
-                        .send((id, builder.build(target)))
-                        .expect("Engine was stopped");
+                    if window_sender.send((id, builder.build(target))).is_err() {
+                        *control = ControlFlow::Exit;
+                        log::info!("Engine was stopped");
+                    }
                 }
                 other => {
                     if let Some(other) = other.to_static() {
-                        event_sender.send(other).expect("Engine was stopped");
+                        if event_sender.send(other).is_err() {
+                            *control = ControlFlow::Exit;
+                            log::info!("Engine was stopped");
+                        }
                     }
                 }
             }
