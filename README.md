@@ -24,20 +24,6 @@ fn run(mut engine: Engine) {
             });
 
             draw();
-
-            if should_report {
-                log::debug!(
-                    "\n{}",
-                    Reporter::report_all(
-                        "5.0s",
-                        &[
-                            ("UPDATE", &update_report),
-                            ("FRAME", &frame_report),
-                            ("EVENT", &event_report),
-                        ],
-                    )
-                );
-            }
         }
     }
 }
