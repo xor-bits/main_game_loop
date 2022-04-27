@@ -1,7 +1,7 @@
 use crate::{event::EventReceiver, CustomEvent, Event};
 use std::{
     sync::mpsc::{RecvTimeoutError, TryRecvError},
-    time::{Duration, Instant},
+    time::Duration,
 };
 use winit::{
     error::OsError,
@@ -24,13 +24,13 @@ pub trait AnyEngine: Sized {
         }
     }
 
-    fn wait_deadline(&mut self, deadline: Instant) -> Option<Event> {
+    /* TODO: feature deadline_api: fn wait_deadline(&mut self, deadline: Instant) -> Option<Event> {
         match self.event_receiver().event_receiver.recv_deadline(deadline) {
             Ok(event) => Some(event),
             Err(RecvTimeoutError::Disconnected) => unreachable!(),
             Err(RecvTimeoutError::Timeout) => None,
         }
-    }
+    } */
 
     fn wait_timeout(&mut self, timeout: Duration) -> Option<Event> {
         match self.event_receiver().event_receiver.recv_timeout(timeout) {

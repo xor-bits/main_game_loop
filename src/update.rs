@@ -23,8 +23,8 @@ impl UpdateRate {
     pub fn to_interval(self) -> Duration {
         match self {
             UpdateRate::Interval(interval) => interval,
-            UpdateRate::PerSecond(count) => Duration::SECOND / count,
-            UpdateRate::PerMinute(count) => Duration::SECOND * 60 / count,
+            UpdateRate::PerSecond(count) => Duration::from_secs(1) / count,
+            UpdateRate::PerMinute(count) => Duration::from_secs(1) * 60 / count,
         }
     }
 }
@@ -53,7 +53,7 @@ impl UpdateLoop {
     /// fn update(&mut self) {
     ///     self.position += self.velocity;
     /// }
-    /// 
+    ///
     /// fn draw(&mut self, delta: f32) {
     ///     let position = self.position + self.velocity * delta;
     ///     draw_quad(position);

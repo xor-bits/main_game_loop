@@ -89,7 +89,9 @@ impl EventLoop {
                 Event::UserEvent(CustomEvent::RequestStop) => {
                     *control = ControlFlow::Exit;
                 }
-                Event::UserEvent(CustomEvent::RequestWindowCreation(box (id, config))) => {
+                Event::UserEvent(CustomEvent::RequestWindowCreation(b)) => {
+                    let (id, config) = *b;
+
                     let mut builder = WindowBuilder::default();
                     builder.window = config;
 

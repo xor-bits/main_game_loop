@@ -35,17 +35,12 @@ fn run(mut engine: Engine) {
             let should_report = frame_report.end(timer);
 
             if should_report {
-                log::debug!(
-                    "\n{}",
-                    Reporter::report_all(
-                        "5.0s",
-                        &[
-                            ("UPDATE", &update_report),
-                            ("FRAME", &frame_report),
-                            ("EVENT", &event_report),
-                        ],
-                    )
-                );
+                let reporters = [
+                    ("UPDATE", &update_report),
+                    ("FRAME", &frame_report),
+                    ("EVENT", &event_report),
+                ];
+                log::debug!("\n{}", Reporter::report_all("5.0s", &reporters,));
             }
         }
     }

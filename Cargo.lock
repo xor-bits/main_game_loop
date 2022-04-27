@@ -475,7 +475,7 @@ dependencies = [
 
 [[package]]
 name = "main_game_loop"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "env_logger",
  "gilrs",
