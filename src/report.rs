@@ -3,6 +3,8 @@ use std::{
     time::{Duration, Instant},
 };
 
+//
+
 #[derive(Debug)]
 pub struct Reporter {
     count: u32,
@@ -19,11 +21,7 @@ pub struct Timer {
     begin: Instant,
 }
 
-impl Default for Reporter {
-    fn default() -> Self {
-        Self::new_with_interval(Duration::from_secs(3))
-    }
-}
+//
 
 impl Reporter {
     pub fn new() -> Self {
@@ -161,6 +159,12 @@ impl Reporter {
                 .map(|fps| format!("{}", fps))
                 .unwrap_or_else(|| "...".into()),
         )
+    }
+}
+
+impl Default for Reporter {
+    fn default() -> Self {
+        Self::new_with_interval(Duration::from_secs(3))
     }
 }
 

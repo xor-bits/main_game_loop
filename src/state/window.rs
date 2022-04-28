@@ -1,14 +1,12 @@
+use crate::event::Event;
 use winit::{
     dpi::{PhysicalPosition, PhysicalSize},
     event::WindowEvent,
     window::{Window, WindowId},
 };
 
-use crate::event::Event;
-
 //
 
-// TODO:
 #[derive(Debug, Clone, Copy)]
 pub struct WindowState {
     /// window size

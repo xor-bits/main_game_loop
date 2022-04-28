@@ -1,9 +1,8 @@
+use crate::event::{CustomEvent, Event};
 use gilrs::{Axis, Button, Event as GilrsEvent, EventType, GamepadId};
 use glam::Vec2;
 use std::collections::{hash_map::Entry, HashMap};
 use winit::event::{ElementState, KeyboardInput, ScanCode, VirtualKeyCode, WindowEvent};
-
-use crate::event::{CustomEvent, Event};
 
 //
 
