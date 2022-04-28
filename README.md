@@ -16,15 +16,15 @@ fn run(mut engine: Engine) {
     let mut update_loop = UpdateLoop::new(UpdateRate::PerSecond(60));
 
     loop {
-        if let Some(event) = engine.poll() {
-            event(event);
-        } else {
-            let delta = update_loop.update(|| {
-                update();
-            });
-
-            draw();
+        while let Some(event) = engine.poll() {
+            // process events here
         }
+
+        let delta = update_loop.update(|| {
+            // process updates @ 60 / s here
+        });
+
+        // process drawing here
     }
 }
 

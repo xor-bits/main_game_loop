@@ -2,6 +2,7 @@ use main_game_loop::{
     engine::AnyEngine,
     event::{EventLoop, EventReceiver},
     report::Reporter,
+    state::window::WindowState,
     update::{UpdateLoop, UpdateRate},
 };
 use std::{thread, time::Duration};
@@ -10,7 +11,8 @@ use winit::window::WindowBuilder;
 //
 
 fn run(mut engine: Engine) {
-    let _window = engine.create_window(WindowBuilder::new()).unwrap();
+    let window = engine.create_window(WindowBuilder::new()).unwrap();
+    let mut ws = WindowState::new(&window);
     let mut update_loop = UpdateLoop::new(UpdateRate::PerSecond(60));
 
     let mut update_report = Reporter::new();
@@ -18,30 +20,34 @@ fn run(mut engine: Engine) {
     let mut event_report = Reporter::new();
 
     loop {
-        if engine.poll().is_some() {
-            let timer = event_report.begin();
-            // event();
-            event_report.end(timer);
-        } else {
-            update_loop.update(|| {
-                let timer = update_report.begin();
-                // update();
-                update_report.end(timer);
+        while let Some(event) = engine.poll() {
+            event_report.time(|| {
+                ws.event(&event);
             });
 
-            let timer = frame_report.begin();
+            if ws.should_close {
+                return;
+            }
+        }
+
+        update_loop.update(|| {
+            update_report.time(|| {
+                // update();
+            });
+        });
+
+        frame_report.time(|| {
             std::thread::sleep(Duration::from_millis(3));
             // draw();
-            let should_report = frame_report.end(timer);
+        });
 
-            if should_report {
-                let reporters = [
-                    ("UPDATE", &update_report),
-                    ("FRAME", &frame_report),
-                    ("EVENT", &event_report),
-                ];
-                log::debug!("\n{}", Reporter::report_all("5.0s", &reporters,));
-            }
+        if frame_report.should_report() {
+            let reporters = [
+                ("UPDATE", &update_report),
+                ("FRAME", &frame_report),
+                ("EVENT", &event_report),
+            ];
+            log::debug!("\n{}", Reporter::report_all("5.0s", &reporters,));
         }
     }
 }

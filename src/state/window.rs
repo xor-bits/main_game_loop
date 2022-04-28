@@ -20,6 +20,9 @@ pub struct WindowState {
     /// is the window focused
     pub focused: bool,
 
+    /// the window is being closed
+    pub should_close: bool,
+
     /// is cursor inside the window?
     pub cursor_in: bool,
 
@@ -44,6 +47,7 @@ impl WindowState {
             size,
             aspect: Self::aspect(size),
             focused: Default::default(),
+            should_close: Default::default(),
             cursor_in: Default::default(),
             cursor_pos: Default::default(),
             scale_factor: window.scale_factor(),
@@ -88,6 +92,10 @@ impl WindowState {
             } => {
                 self.focused = *focused;
             }
+            Event::WindowEvent {
+                event: WindowEvent::CloseRequested,
+                ..
+            } => self.should_close = true,
             _ => {}
         }
     }

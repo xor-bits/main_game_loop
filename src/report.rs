@@ -59,6 +59,16 @@ impl Reporter {
         should_report
     }
 
+    pub fn time<T, F>(&mut self, f: F) -> T
+    where
+        F: FnOnce() -> T,
+    {
+        let timer = self.begin();
+        let result = f();
+        self.end(timer);
+        result
+    }
+
     pub fn manual(&mut self, elapsed: Duration) -> bool {
         self.elapsed += elapsed;
         self.count += 1;

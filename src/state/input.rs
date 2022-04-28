@@ -14,9 +14,6 @@ pub struct InputState {
 
     players: Vec<Option<GamepadId>>,
     gamepads: HashMap<GamepadId, Gamepad>,
-
-    window_focused: bool,
-    should_close: bool,
 }
 
 #[derive(Debug, Default)]
@@ -183,9 +180,6 @@ impl Default for InputState {
 
             players: Default::default(),
             gamepads: Default::default(),
-
-            window_focused: Default::default(),
-            should_close: Default::default(),
         }
     }
 }
@@ -500,23 +494,11 @@ impl InputState {
                 ..
             } => self.update_key(input),
             // Event::DeviceEvent { event, .. } => log::debug!("device event: {event:?}"),
-            Event::WindowEvent {
-                event: WindowEvent::Focused(f),
-                ..
-            } => self.window_focused = *f,
-            Event::WindowEvent {
-                event: WindowEvent::CloseRequested,
-                ..
-            } => self.should_close = true,
             _ => (),
         }
     }
 
     //
-
-    pub fn window_focused(&self) -> bool {
-        self.window_focused
-    }
 
     pub fn gui_key_held(&self, key: VirtualKeyCode) -> bool {
         if let Some(value) = self.virtual_keymap.get(&key) {
@@ -610,10 +592,6 @@ impl InputState {
                 player,
             ),
         }
-    }
-
-    pub fn should_close(&self) -> bool {
-        self.should_close
     }
 
     //
