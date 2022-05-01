@@ -1,92 +1,89 @@
 use main_game_loop::{
-    engine::AnyEngine,
-    event::{EventLoop, EventReceiver},
+    event::{Event, EventLoop, EventLoopTarget},
     report::Reporter,
     state::window::WindowState,
     update::{UpdateLoop, UpdateRate},
 };
-use std::{thread, time::Duration};
-use winit::window::WindowBuilder;
+use std::time::Duration;
+use winit::{
+    event_loop::ControlFlow,
+    window::{Window, WindowBuilder},
+};
 
 //
 
-fn run(mut engine: Engine) {
-    let window = engine.create_window(WindowBuilder::new()).unwrap();
-    let mut ws = WindowState::new(&window);
-    let mut update_loop = UpdateLoop::new(UpdateRate::PerSecond(60));
+struct App {
+    window: Window,
+    ws: WindowState,
+    update_loop: UpdateLoop,
 
-    let mut update_report = Reporter::new();
-    let mut frame_report = Reporter::new();
-    let mut event_report = Reporter::new();
+    update_report: Reporter,
+    frame_report: Reporter,
+    event_report: Reporter,
+}
 
-    loop {
-        while let Some(event) = engine.poll() {
-            event_report.time(|| {
-                ws.event(&event);
-            });
+impl App {
+    fn init(target: &EventLoopTarget) -> Self {
+        let window = WindowBuilder::new().build(target).unwrap();
+        let ws = WindowState::new(&window);
+        let update_loop = UpdateLoop::new(UpdateRate::PerSecond(60));
 
-            if ws.should_close {
-                return;
-            }
+        let update_report = Reporter::new();
+        let frame_report = Reporter::new();
+        let event_report = Reporter::new();
+
+        Self {
+            window,
+            ws,
+            update_loop,
+
+            update_report,
+            frame_report,
+            event_report,
+        }
+    }
+
+    fn event(&mut self, event: Event, control: &mut ControlFlow) {
+        self.event_report.time(|| {
+            *control = ControlFlow::Poll;
+            let _ = &self.window;
+            self.ws.event(&event);
+        });
+
+        if self.ws.should_close {
+            *control = ControlFlow::Exit;
+            return;
         }
 
-        update_loop.update(|| {
-            update_report.time(|| {
-                // update();
+        if let Event::RedrawEventsCleared = event {
+            self.update_loop.update(|| {
+                self.update_report.time(|| {
+                    // update();
+                });
             });
-        });
 
-        frame_report.time(|| {
-            std::thread::sleep(Duration::from_millis(3));
-            // draw();
-        });
+            self.frame_report.time(|| {
+                std::thread::sleep(Duration::from_millis(3));
+                // draw();
+            });
 
-        if frame_report.should_report() {
-            let reporters = [
-                ("UPDATE", &update_report),
-                ("FRAME", &frame_report),
-                ("EVENT", &event_report),
-            ];
-            log::debug!("\n{}", Reporter::report_all("5.0s", &reporters,));
+            if self.frame_report.should_report() {
+                let reporters = [
+                    ("UPDATE", &mut self.update_report),
+                    ("FRAME", &mut self.frame_report),
+                    ("EVENT", &mut self.event_report),
+                ];
+                log::debug!("\n{}", Reporter::report_all("5.0s", reporters));
+            }
         }
     }
 }
 
 fn main() {
     env_logger::init();
-    Engine::new().run(run);
-}
-
-// --------------
-// No Engine impl
-// --------------
-
-struct Engine {
-    event_receiver: Option<EventReceiver>,
-}
-
-//
-
-impl Engine {
-    pub fn new() -> Self {
-        Self {
-            event_receiver: None,
-        }
-    }
-}
-
-impl AnyEngine for Engine {
-    fn run<F>(mut self, f: F) -> !
-    where
-        F: FnOnce(Self) + Send + 'static,
-    {
-        let (game_loop, event_receiver) = EventLoop::new();
-        self.event_receiver = Some(event_receiver);
-        thread::spawn(move || f(self));
-        game_loop.run()
-    }
-
-    fn event_receiver(&mut self) -> &mut EventReceiver {
-        self.event_receiver.as_mut().expect("GameLoop not running")
-    }
+    let target = EventLoop::new();
+    let mut app = App::init(&target);
+    target.run(move |event, _, control| {
+        app.event(event, control);
+    });
 }

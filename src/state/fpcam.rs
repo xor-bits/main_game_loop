@@ -1,5 +1,6 @@
+use crate::event::Event;
+
 use super::input::{InputAxis, InputState};
-use crate::Event;
 use glam::Vec2;
 use winit::{
     event::{DeviceEvent, WindowEvent},

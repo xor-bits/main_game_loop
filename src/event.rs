@@ -1,21 +1,20 @@
-use gilrs::GilrsBuilder;
-use std::{
-    sync::mpsc::{channel, Receiver, Sender},
-    thread,
-};
+use std::{future::Future, ops::Deref};
 use winit::{
     error::OsError,
-    event_loop::{ControlFlow, EventLoopProxy},
-    window::{Window, WindowAttributes, WindowBuilder},
+    event_loop::{ControlFlow, EventLoop as WinitEventLoop, EventLoopProxy, EventLoopWindowTarget},
+    window::Window,
 };
 
 //
 
 pub use gilrs::Event as GamePadEvent;
 
+use crate::as_async;
+
 //
 
 pub type Event<'a> = winit::event::Event<'a, CustomEvent>;
+pub type EventLoopTarget = EventLoopWindowTarget<CustomEvent>;
 pub type WindowCreation = (usize, Result<Window, OsError>);
 
 //
@@ -23,99 +22,47 @@ pub type WindowCreation = (usize, Result<Window, OsError>);
 #[derive(Debug, Clone)]
 pub enum CustomEvent {
     GamePadEvent(GamePadEvent),
-    RequestWindowCreation(Box<(usize, WindowAttributes)>),
-    RequestStop,
 }
 
 #[derive(Debug)]
 pub struct EventLoop {
-    event_loop: Option<winit::event_loop::EventLoop<CustomEvent>>,
-
-    window_sender: Sender<WindowCreation>,
-    event_sender: Sender<Event<'static>>,
-}
-
-#[derive(Debug)]
-pub struct EventReceiver {
-    pub window_receiver: Receiver<WindowCreation>,
-    pub event_receiver: Receiver<Event<'static>>,
-    pub event_proxy: EventLoopProxy<CustomEvent>,
+    event_loop: WinitEventLoop<CustomEvent>,
 }
 
 //
 
 impl EventLoop {
-    pub fn new() -> (Self, EventReceiver) {
-        let event_loop = winit::event_loop::EventLoop::with_user_event();
-        let event_proxy = event_loop.create_proxy();
-        let event_loop = Some(event_loop);
-
-        let (window_sender, window_receiver) = channel();
-        let (event_sender, event_receiver) = channel();
-
-        let r#loop = Self {
-            event_loop,
-
-            window_sender,
-            event_sender,
-        };
-
-        let receiver = EventReceiver {
-            window_receiver,
-            event_receiver,
-            event_proxy,
-        };
-
-        (r#loop, receiver)
+    pub fn new() -> Self {
+        Self::default()
     }
 
     // Main winit event thread
     // has to be the main thread
-    pub fn run(self) -> ! {
-        let Self {
-            mut event_loop,
-            window_sender,
-            event_sender,
-        } = self;
+    pub fn run<F>(self, event_handler: F) -> !
+    where
+        F: FnMut(Event, &EventLoopTarget, &mut ControlFlow) + 'static,
+    {
+        Self::game_pad_loop(self.event_loop.create_proxy());
+        self.event_loop.run(event_handler)
+    }
 
-        let event_loop = event_loop.take().expect("GameLoop was already running");
-
-        Self::game_pad_loop(event_loop.create_proxy());
-
-        event_loop.run(move |event, target, control| {
-            *control = ControlFlow::Wait;
-
-            match event {
-                Event::UserEvent(CustomEvent::RequestStop) => {
-                    *control = ControlFlow::Exit;
-                }
-                Event::UserEvent(CustomEvent::RequestWindowCreation(b)) => {
-                    let (id, config) = *b;
-
-                    let mut builder = WindowBuilder::default();
-                    builder.window = config;
-
-                    if window_sender.send((id, builder.build(target))).is_err() {
-                        *control = ControlFlow::Exit;
-                        log::info!("Engine was stopped");
-                    }
-                }
-                other => {
-                    if let Some(other) = other.to_static() {
-                        if event_sender.send(other).is_err() {
-                            *control = ControlFlow::Exit;
-                            log::info!("Engine was stopped");
-                        }
-                    }
-                }
-            }
+    pub fn run_async<F, Fut>(self, mut event_handler: F) -> !
+    where
+        F: FnMut(Event, &EventLoopTarget, &mut ControlFlow) -> Fut + 'static,
+        Fut: Future<Output = ()> + 'static,
+    {
+        Self::game_pad_loop(self.event_loop.create_proxy());
+        self.event_loop.run(move |e, t, c| {
+            as_async(event_handler(e, t, c));
         });
     }
 
+    // TODO:
+    #[cfg(not(target_arch = "wasm32"))]
     // GILRS gamepad event thread
     fn game_pad_loop(proxy: EventLoopProxy<CustomEvent>) {
-        thread::spawn(move || {
-            let mut gilrs = match GilrsBuilder::new()
+        std::thread::spawn(move || {
+            let mut gilrs = match gilrs::GilrsBuilder::new()
                 .add_included_mappings(true)
                 .add_env_mappings(true)
                 .with_default_filters(true)
@@ -139,5 +86,24 @@ impl EventLoop {
                 };
             }
         });
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    fn game_pad_loop(_: EventLoopProxy<CustomEvent>) {}
+}
+
+impl Default for EventLoop {
+    fn default() -> Self {
+        Self {
+            event_loop: WinitEventLoop::with_user_event(),
+        }
+    }
+}
+
+impl Deref for EventLoop {
+    type Target = EventLoopTarget;
+
+    fn deref(&self) -> &Self::Target {
+        &self.event_loop
     }
 }

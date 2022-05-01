@@ -1,7 +1,5 @@
-use std::{
-    ops::Deref,
-    time::{Duration, Instant},
-};
+use instant::Instant;
+use std::{ops::Deref, time::Duration};
 
 //
 
@@ -46,15 +44,9 @@ impl Reporter {
         }
     }
 
-    pub fn end(&mut self, timer: Timer) -> bool {
+    pub fn end(&mut self, timer: Timer) {
         self.elapsed += timer.begin.elapsed();
         self.count += 1;
-
-        let should_report = self.should_report();
-        if should_report {
-            self.reset();
-        }
-        should_report
     }
 
     pub fn time<T, F>(&mut self, f: F) -> T
@@ -67,18 +59,7 @@ impl Reporter {
         result
     }
 
-    pub fn manual(&mut self, elapsed: Duration) -> bool {
-        self.elapsed += elapsed;
-        self.count += 1;
-
-        let should_report = self.should_report();
-        if should_report {
-            self.reset();
-        }
-        should_report
-    }
-
-    pub fn should_report(&self) -> bool {
+    pub fn should_report(&mut self) -> bool {
         self.report_timer.elapsed() >= self.report_interval
     }
 
@@ -86,24 +67,10 @@ impl Reporter {
         self.report_interval
     }
 
-    /* pub fn report(&mut self, interval_name: &str, per_second_name: &str) {
-        let avg = self.elapsed / self.count;
-        let fps = self.count as f64 / self.report_interval.as_secs_f64();
-
-        log::debug!(
-            "Report ({interval}s)\nAVG {interval_name}: {per_second:.2?}\nRESP {per_second_name}: {resp_fps:.2}\nREAL {per_second_name}: {real_fps:.2}",
-            interval = self.report_interval.as_secs_f64(),
-            per_second = avg,
-
-            resp_fps = 1.0 / avg.as_secs_f64(),
-            real_fps = fps,
-
-            interval_name = interval_name,
-            per_second_name = per_second_name,
-        );
-    } */
-
-    pub fn report_all(label: &str, reporters: &[(&'static str, &Self)]) -> String {
+    pub fn report_all<const COUNT: usize>(
+        label: &str,
+        reporters: [(&'static str, &mut Self); COUNT],
+    ) -> String {
         #[cfg(debug_assertions)]
         const DEBUG: &str = "debug build";
         #[cfg(not(debug_assertions))]
@@ -118,14 +85,21 @@ impl Reporter {
         let padding = " ".repeat(max_label_width - 7);
         let first = format!("Report {label} ({DEBUG})\n{padding}per second @ time per\n");
 
-        Some(first)
+        let result = Some(first)
             .into_iter()
             .chain(reporters.iter().map(|(label, reporter)| {
                 let (int, per_sec) = reporter.last_string();
                 let padding = " ".repeat(max_label_width - label.len() - per_sec.len() + 1);
                 format!("{label}: {padding}{per_sec} @ {int}\n")
             }))
-            .collect()
+            .collect();
+
+        // reset all
+        for (_, reporter) in reporters.into_iter() {
+            reporter.reset();
+        }
+
+        result
     }
 
     pub fn reset(&mut self) {
@@ -139,24 +113,21 @@ impl Reporter {
         self.last_per_second = Some(fps);
     }
 
-    /* pub fn report_maybe(&mut self, interval_name: &str, per_second_name: &str) {
-        if self.should_report() {
-            self.report(interval_name, per_second_name);
-            self.reset();
-        }
-    } */
-
     pub fn last(&self) -> Option<(Duration, f64)> {
         Some((self.last_interval?, self.last_per_second?))
     }
 
     pub fn last_string(&self) -> (String, String) {
+        self.last_string_prec(4, 1)
+    }
+
+    pub fn last_string_prec(&self, int_prec: usize, per_sec_prec: usize) -> (String, String) {
         (
             self.last_interval
-                .map(|ft| format!("{:?}", ft))
+                .map(|ft| format!("{ft:.int_prec$?}"))
                 .unwrap_or_else(|| "...".into()),
             self.last_per_second
-                .map(|fps| format!("{}", fps))
+                .map(|ps| format!("{ps:.per_sec_prec$}"))
                 .unwrap_or_else(|| "...".into()),
         )
     }
