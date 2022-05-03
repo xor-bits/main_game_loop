@@ -1,6 +1,8 @@
 use main_game_loop::{
-    event::{Event, EventLoop, EventLoopTarget},
+    event::{Event, EventLoopTarget},
+    main_app,
     report::Reporter,
+    runnable::Runnable,
     state::window::WindowState,
     update::{UpdateLoop, UpdateRate},
 };
@@ -13,7 +15,7 @@ use winit::{
 //
 
 struct App {
-    window: Window,
+    _window: Window,
     ws: WindowState,
     update_loop: UpdateLoop,
 
@@ -24,8 +26,8 @@ struct App {
 
 impl App {
     fn init(target: &EventLoopTarget) -> Self {
-        let window = WindowBuilder::new().build(target).unwrap();
-        let ws = WindowState::new(&window);
+        let _window = WindowBuilder::new().build(target).unwrap();
+        let ws = WindowState::new(&_window);
         let update_loop = UpdateLoop::new(UpdateRate::PerSecond(60));
 
         let update_report = Reporter::new();
@@ -33,7 +35,7 @@ impl App {
         let event_report = Reporter::new();
 
         Self {
-            window,
+            _window,
             ws,
             update_loop,
 
@@ -42,48 +44,40 @@ impl App {
             event_report,
         }
     }
+}
 
-    fn event(&mut self, event: Event, control: &mut ControlFlow) {
+impl Runnable for App {
+    fn event(&mut self, event: Event, _: &EventLoopTarget, control: &mut ControlFlow) {
         self.event_report.time(|| {
-            *control = ControlFlow::Poll;
-            let _ = &self.window;
             self.ws.event(&event);
         });
 
         if self.ws.should_close {
             *control = ControlFlow::Exit;
-            return;
         }
+    }
 
-        if let Event::RedrawEventsCleared = event {
-            self.update_loop.update(|| {
-                self.update_report.time(|| {
-                    // update();
-                });
+    fn draw(&mut self) {
+        self.update_loop.update(|| {
+            self.update_report.time(|| {
+                // update();
             });
+        });
 
-            self.frame_report.time(|| {
-                std::thread::sleep(Duration::from_millis(3));
-                // draw();
-            });
+        self.frame_report.time(|| {
+            std::thread::sleep(Duration::from_millis(3));
+            // draw();
+        });
 
-            if self.frame_report.should_report() {
-                let reporters = [
-                    ("UPDATE", &mut self.update_report),
-                    ("FRAME", &mut self.frame_report),
-                    ("EVENT", &mut self.event_report),
-                ];
-                log::debug!("\n{}", Reporter::report_all("5.0s", reporters));
-            }
+        if self.frame_report.should_report() {
+            let reporters = [
+                ("UPDATE", &mut self.update_report),
+                ("FRAME", &mut self.frame_report),
+                ("EVENT", &mut self.event_report),
+            ];
+            log::debug!("\n{}", Reporter::report_all("5.0s", reporters));
         }
     }
 }
 
-fn main() {
-    env_logger::init();
-    let target = EventLoop::new();
-    let mut app = App::init(&target);
-    target.run(move |event, _, control| {
-        app.event(event, control);
-    });
-}
+main_app!(App);

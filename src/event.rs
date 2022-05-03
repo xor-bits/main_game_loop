@@ -1,4 +1,4 @@
-use std::{future::Future, ops::Deref};
+use std::ops::Deref;
 use winit::{
     error::OsError,
     event_loop::{ControlFlow, EventLoop as WinitEventLoop, EventLoopProxy, EventLoopWindowTarget},
@@ -9,7 +9,7 @@ use winit::{
 
 pub use gilrs::Event as GamePadEvent;
 
-use crate::as_async;
+use crate::runnable::Runnable;
 
 //
 
@@ -32,29 +32,40 @@ pub struct EventLoop {
 //
 
 impl EventLoop {
+    #[inline(always)]
     pub fn new() -> Self {
         Self::default()
     }
 
-    // Main winit event thread
-    // has to be the main thread
-    pub fn run<F>(self, event_handler: F) -> !
+    /// Main winit event thread
+    ///
+    /// has to be called from the main thread
+    #[inline(always)]
+    pub fn run<F>(self, mut event_handler: F) -> !
     where
         F: FnMut(Event, &EventLoopTarget, &mut ControlFlow) + 'static,
     {
         Self::game_pad_loop(self.event_loop.create_proxy());
-        self.event_loop.run(event_handler)
+        self.event_loop.run(move |e, t, c| {
+            *c = ControlFlow::Poll;
+            event_handler(e, t, c)
+        })
     }
 
-    pub fn run_async<F, Fut>(self, mut event_handler: F) -> !
+    /// Main winit event thread
+    ///
+    /// has to be called from the main thread
+    #[inline(always)]
+    pub fn runnable<A>(self, mut runnable: A) -> !
     where
-        F: FnMut(Event, &EventLoopTarget, &mut ControlFlow) -> Fut + 'static,
-        Fut: Future<Output = ()> + 'static,
+        A: Runnable + 'static,
     {
-        Self::game_pad_loop(self.event_loop.create_proxy());
-        self.event_loop.run(move |e, t, c| {
-            as_async(event_handler(e, t, c));
-        });
+        self.run(move |e, t, c| {
+            match e {
+                Event::RedrawEventsCleared => runnable.draw(),
+                e => runnable.event(e, t, c),
+            };
+        })
     }
 
     // TODO:

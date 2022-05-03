@@ -11,25 +11,43 @@
 ### Example usage with some random `Engine`
 
 ```rust
-fn run(mut engine: Engine) {
-    let window = engine.create_window(WindowBuilder::new())unwrap();
-    let mut update_loop = UpdateLoop::new(UpdateRate::PerSecond(60));
+struct App {
+    window: Window,
+    ws: WindowState,
+    update_loop: UpdateLoop,
+}
 
-    loop {
-        while let Some(event) = engine.poll() {
-            // process events here
+impl App {
+    fn init(target: &EventLoopTarget) -> Self {
+        let window = WindowBuilder::new().build(target).unwrap();
+        let ws = WindowState::new(&window);
+        let update_loop = UpdateLoop::new(UpdateRate::PerSecond(60));
+
+        Self {
+            window,
+            ws,
+            update_loop,
         }
-
-        let delta = update_loop.update(|| {
-            // process updates @ 60 / s here
-        });
-
-        // process drawing here
     }
 }
 
-fn main() {
-    env_logger::init();
-    Engine::new().run(run);
+impl Runnable for App {
+    fn event(&mut self, event: Event, _: &EventLoopTarget, control: &mut ControlFlow) {
+        self.ws.event(&event);
+
+        if self.ws.should_close {
+            *control = ControlFlow::Exit;
+        }
+    }
+
+    fn draw(&mut self) {
+        self.update_loop.update(|| {
+            // update();
+        });
+
+        // draw();
+    }
 }
+
+main_app!(App);
 ```
