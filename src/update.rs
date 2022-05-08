@@ -50,7 +50,7 @@ impl UpdateLoop {
     /// soon.
     ///
     /// Example usage with `delta`:
-    /// ```no_run
+    /// ```ignore
     /// fn update(&mut self) {
     ///     self.position += self.velocity;
     /// }
