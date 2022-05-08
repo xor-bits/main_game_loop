@@ -3,8 +3,9 @@
 # main_game_loop
 
 [![dependency status](https://deps.rs/repo/github/Overpeek/main_game_loop/status.svg)](https://deps.rs/repo/github/Overpeek/main_game_loop)
-
-<!-- [![build status](https://github.com/Overpeek/main_game_loop/actions/workflows/rust.yml/badge.svg)](https://github.com/Overpeek/main_game_loop/actions) -->
+[![build status](https://github.com/Overpeek/main_game_loop/actions/workflows/rust.yml/badge.svg)](https://github.com/Overpeek/main_game_loop/actions)
+[![crates.io](https://img.shields.io/crates/v/main_game_loop.svg?label=main_game_loop)](https://crates.io/crates/main_game_loop)
+[![docs.rs](https://docs.rs/main_game_loop/badge.svg)](https://docs.rs/main_game_loop/)
 
 </div>
 
