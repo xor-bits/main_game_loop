@@ -5,6 +5,7 @@ edition = "2021"
 description = "A game loop with event handling"
 license = "MIT"
 repository = "https://github.com/Overpeek/main_game_loop"
+documentation = "https://docs.rs/main_game_loop"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
