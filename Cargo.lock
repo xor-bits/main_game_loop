@@ -496,7 +496,7 @@ dependencies = [
 
 [[package]]
 name = "main_game_loop"
-version = "0.3.2"
+version = "0.3.3"
 dependencies = [
  "console_error_panic_hook",
  "console_log",
