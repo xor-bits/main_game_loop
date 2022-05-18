@@ -62,7 +62,7 @@ impl FPCam {
     }
 
     pub fn get_dir(&self) -> Vec2 {
-        Self::clamp2(self.dir)
+        self.dir
     }
 
     pub fn get_matrix(&self, eye: Vec3, ws: &WindowState) -> Mat4 {
