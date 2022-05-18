@@ -1,34 +1,67 @@
-name: Rust
+name: Tests
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    branches: master
+  pull_request: {}
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
-
+  test:
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v2
-    - name: Deps
-      run: sudo apt install -y pkg-config libudev-dev
-    - name: Build
-      run: cargo build --verbose
-    - name: Run tests
-      run: cargo test --verbose
+      - name: Deps
+        run: sudo apt update && sudo apt install -y pkg-config libudev-dev
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          profile: minimal
+      - uses: Swatinem/rust-cache@v1
+      - uses: actions-rs/cargo@v1
+        with:
+          command: install
+          args: cargo-nextest
+      - uses: actions-rs/cargo@v1
+        with:
+          command: nextest
+          args: run --all
 
-    - uses: actions/cache@v2
-      with:
-        path: |
-          ~/.cargo/bin/
-          ~/.cargo/registry/index/
-          ~/.cargo/registry/cache/
-          ~/.cargo/git/db/
-          target/
-        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+  clippy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deps
+        run: sudo apt update && sudo apt install -y pkg-config libudev-dev
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          components: clippy
+          override: true
+          profile: minimal
+      - uses: Swatinem/rust-cache@v1
+      - uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --all -- -D warnings
+
+  rustfmt:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deps
+        run: sudo apt update && sudo apt install -y pkg-config libudev-dev
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          components: rustfmt
+          override: true
+          profile: minimal
+      - uses: Swatinem/rust-cache@v1
+      - uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check
