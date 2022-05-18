@@ -1,6 +1,6 @@
 [package]
 name = "main_game_loop"
-version = "0.3.4"
+version = "0.4.0"
 edition = "2021"
 description = "A game loop with event handling"
 license = "MIT"
@@ -10,29 +10,30 @@ documentation = "https://docs.rs/main_game_loop"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-instant = "0.1.12"
-winit = "0.26.1"
-log = "0.4.16"
-glam = "0.20.3"
+instant = "0.1"
+winit = "0.26"
+log = "0.4"
+glam = "0.20"
+rustc-hash = "1.1"
 
-# sdl2 = "0.35.2"
-gilrs = "0.8.2"
+# sdl2 = "0.35"
+gilrs = "0.8"
 
 
 [dev-dependencies]
-env_logger = "0.9.0"
+env_logger = "0.9"
 
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 # syncronous await operator
-pollster = "0.2.5"
+pollster = "0.2"
 # logging
 env_logger = "0.9"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 # futures for wasm
-wasm-bindgen-futures = "0.4.30"
+wasm-bindgen-futures = "0.4"
 # logging
-console_log = { version = "0.2.0", features = ["color"] }
+console_log = { version = "0.2", features = ["color"] }
 # wasm panic hook
-console_error_panic_hook = "0.1.7"
+console_error_panic_hook = "0.1"

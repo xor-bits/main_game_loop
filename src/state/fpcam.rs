@@ -1,64 +1,95 @@
+use super::window::WindowState;
 use crate::event::Event;
-
-use super::input::{InputAxis, InputState};
-use glam::Vec2;
-use winit::{
-    event::{DeviceEvent, WindowEvent},
-    window::Window,
-};
+use glam::{Mat4, Vec2, Vec3};
+use winit::event::DeviceEvent;
 
 //
 
 /// First person camera controller
-#[derive(Debug, Clone, Copy, Default)]
+///
+/// TODO: specify player (mouse | gamepad-id)
+#[derive(Debug, Clone, Copy)]
 pub struct FPCam {
-    focused: bool,
     dir: Vec2,
-    vel: Vec2,
+    sensitivity: Vec2,
+    fov: f32,
+    near: f32,
+    far: f32,
 }
 
 //
+
+impl Default for FPCam {
+    fn default() -> Self {
+        Self {
+            dir: Vec2::ZERO,
+            sensitivity: Vec2::ONE * 0.003,
+            fov: std::f32::consts::FRAC_PI_2,
+            near: 0.1,
+            far: 100.0,
+        }
+    }
+}
 
 impl FPCam {
     pub fn new() -> Self {
         Self::default()
     }
 
-    pub fn with_dir(dir: Vec2) -> Self {
-        Self {
-            dir,
-            ..Default::default()
-        }
+    pub fn with_dir(mut self, dir: Vec2) -> Self {
+        self.dir = Self::clamp2(dir);
+        self
     }
 
-    pub fn dir(&self, delta: f32) -> Vec2 {
-        Self::clamp2(self.dir + self.vel * delta)
+    pub fn with_sensitivity(mut self, sensitivity: Vec2) -> Self {
+        self.sensitivity = sensitivity;
+        self
     }
 
-    pub fn update(&mut self, input: &InputState, delta: f32) {
-        self.vel = delta * Vec2::new(-3.0, 3.0) * input.get_axis(InputAxis::Look, 0);
-        self.dir += self.vel;
+    pub fn with_fov(mut self, fov: f32) -> Self {
+        self.fov = fov;
+        self
+    }
+
+    pub fn with_near(mut self, near: f32) -> Self {
+        self.near = near;
+        self
+    }
+
+    pub fn with_far(mut self, far: f32) -> Self {
+        self.far = far;
+        self
+    }
+
+    pub fn get_dir(&self) -> Vec2 {
+        Self::clamp2(self.dir)
+    }
+
+    pub fn get_matrix(&self, eye: Vec3, ws: &WindowState) -> Mat4 {
+        let dir = self.get_dir();
+        let center = Vec3::new(
+            dir.y.cos() * dir.x.sin(),
+            dir.y.sin(),
+            dir.y.cos() * dir.x.cos(),
+        );
+        let up = Vec3::new(0.0, 1.0, 0.0);
+
+        Mat4::perspective_rh(self.fov, ws.aspect, self.near, self.far)
+            * Mat4::look_at_rh(eye, center, up)
+    }
+
+    pub fn update(&mut self, motion: Vec2) {
+        self.dir += self.sensitivity * motion;
         self.clamp();
     }
 
-    pub fn event(&mut self, event: &Event, window: &Window) {
-        match event {
-            Event::DeviceEvent {
-                event: DeviceEvent::MouseMotion { delta: (x, y) },
-                ..
-            } if self.focused => {
-                self.dir -= Vec2::new(*x as f32 * 0.001, *y as f32 * 0.001);
-                self.clamp();
-            }
-            Event::WindowEvent {
-                event: WindowEvent::Focused(focused),
-                ..
-            } => {
-                self.focused = *focused;
-                let _ = window.set_cursor_grab(self.focused);
-                window.set_cursor_visible(!self.focused);
-            }
-            _ => {}
+    pub fn event(&mut self, event: &Event) {
+        if let Event::DeviceEvent {
+            event: DeviceEvent::MouseMotion { delta: (x, y) },
+            ..
+        } = event
+        {
+            self.update(Vec2::new(*x as _, *y as _));
         }
     }
 
