@@ -8,7 +8,7 @@ use winit::event::DeviceEvent;
 /// First person camera controller
 ///
 /// TODO: specify player (mouse | gamepad-id)
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct FPCam {
     dir: Vec2,
     sensitivity: Vec2,

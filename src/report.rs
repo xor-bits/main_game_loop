@@ -1,9 +1,13 @@
 use instant::Instant;
-use std::{ops::Deref, time::Duration};
+use std::{
+    hash::{Hash, Hasher},
+    ops::Deref,
+    time::Duration,
+};
 
 //
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Reporter {
     count: u32,
     elapsed: Duration,
@@ -14,7 +18,7 @@ pub struct Reporter {
     last_per_second: Option<f64>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, Hash)]
 pub struct Timer {
     begin: Instant,
 }
@@ -136,6 +140,26 @@ impl Reporter {
 impl Default for Reporter {
     fn default() -> Self {
         Self::new_with_interval(Duration::from_secs(3))
+    }
+}
+
+impl PartialEq for Reporter {
+    fn eq(&self, other: &Self) -> bool {
+        self.count == other.count
+            && self.elapsed == other.elapsed
+            && self.report_timer == other.report_timer
+            && self.report_interval == other.report_interval
+    }
+}
+
+impl Eq for Reporter {}
+
+impl Hash for Reporter {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.count.hash(state);
+        self.elapsed.hash(state);
+        self.report_timer.hash(state);
+        self.report_interval.hash(state);
     }
 }
 

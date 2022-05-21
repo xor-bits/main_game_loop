@@ -7,7 +7,7 @@ use winit::{
 
 //
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct WindowState {
     /// window size
     pub size: PhysicalSize<u32>,
@@ -32,7 +32,11 @@ pub struct WindowState {
 
     /// identifier for the window
     /// this struct was initialized for
-    pub id: WindowId,
+    ///
+    /// when set to `None`: it will take
+    /// the id of the first event with a
+    /// window id
+    pub id: Option<WindowId>,
 }
 
 //
@@ -44,12 +48,9 @@ impl WindowState {
         Self {
             size,
             aspect: Self::aspect(size),
-            focused: Default::default(),
-            should_close: Default::default(),
-            cursor_in: Default::default(),
-            cursor_pos: Default::default(),
             scale_factor: window.scale_factor(),
-            id: window.id(),
+            id: Some(window.id()),
+            ..Default::default()
         }
     }
 
@@ -106,9 +107,14 @@ impl WindowState {
         }
     }
 
-    fn filter(&self, event: &Event) -> bool {
+    fn filter(&mut self, event: &Event) -> bool {
         if let Event::WindowEvent { window_id, .. } = event {
-            *window_id == self.id
+            if let Some(id) = self.id {
+                *window_id == id
+            } else {
+                self.id = Some(*window_id);
+                true
+            }
         } else {
             false
         }

@@ -3,7 +3,7 @@ use std::time::Duration;
 
 //
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum UpdateRate {
     Interval(Duration),
     PerSecond(u32),
@@ -12,6 +12,7 @@ pub enum UpdateRate {
 
 //
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct UpdateLoop {
     interval: Duration,
     previous: Instant,
@@ -20,6 +21,12 @@ pub struct UpdateLoop {
 
 //
 
+impl Default for UpdateRate {
+    fn default() -> Self {
+        Self::PerSecond(60)
+    }
+}
+
 impl UpdateRate {
     pub fn to_interval(self) -> Duration {
         match self {
@@ -27,6 +34,12 @@ impl UpdateRate {
             UpdateRate::PerSecond(count) => Duration::from_secs(1) / count,
             UpdateRate::PerMinute(count) => Duration::from_secs(1) * 60 / count,
         }
+    }
+}
+
+impl Default for UpdateLoop {
+    fn default() -> Self {
+        Self::new(Default::default())
     }
 }
 
