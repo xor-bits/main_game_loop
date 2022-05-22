@@ -90,6 +90,11 @@ impl UpdateLoop {
             self.lag -= self.interval;
         }
 
+        self.delta()
+    }
+
+    #[inline]
+    pub fn delta(&self) -> f32 {
         self.lag.as_secs_f32() / self.interval.as_secs_f32()
     }
 
