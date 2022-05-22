@@ -8,13 +8,26 @@ use winit::event::{KeyboardInput, VirtualKeyCode, WindowEvent};
 #[derive(Debug, Clone, Default)]
 pub struct KeyboardState {
     inner: Input<VirtualKeyCode>,
+    auto_clear: bool,
 }
 
 //
 
 impl KeyboardState {
+    #[inline]
     pub fn new() -> Self {
         Self::default()
+    }
+
+    #[inline]
+    pub fn with_auto_clear(mut self) -> Self {
+        self.set_auto_clear(true);
+        self
+    }
+
+    #[inline]
+    pub fn set_auto_clear(&mut self, auto_clear: bool) {
+        self.auto_clear = auto_clear;
     }
 
     pub fn event(&mut self, event: &Event) {
@@ -34,7 +47,7 @@ impl KeyboardState {
             } => {
                 self.inner.event(*state, *virtual_keycode);
             }
-            Event::RedrawEventsCleared => self.inner.clear(),
+            Event::RedrawEventsCleared if self.auto_clear => self.inner.clear(),
             _ => (),
         }
     }

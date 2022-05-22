@@ -38,6 +38,7 @@ pub struct GamepadState {
     inner: Input<GamepadButtonInput>,
     axes: FxHashMap<GamepadAxisInput, f32>,
     gamepads: FxHashMap<Gamepad, DeadZone>,
+    auto_clear: bool,
 }
 
 //
@@ -58,6 +59,17 @@ impl GamepadState {
     #[inline]
     pub fn new() -> Self {
         Self::default()
+    }
+
+    #[inline]
+    pub fn with_auto_clear(mut self) -> Self {
+        self.set_auto_clear(true);
+        self
+    }
+
+    #[inline]
+    pub fn set_auto_clear(&mut self, auto_clear: bool) {
+        self.auto_clear = auto_clear;
     }
 
     pub fn event(&mut self, event: &Event) {
@@ -119,7 +131,7 @@ impl GamepadState {
                     _ => {}
                 }
             }
-            Event::RedrawEventsCleared => self.inner.clear(),
+            Event::RedrawEventsCleared if self.auto_clear => self.inner.clear(),
             _ => (),
         }
     }
