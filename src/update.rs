@@ -92,4 +92,9 @@ impl UpdateLoop {
 
         self.lag.as_secs_f32() / self.interval.as_secs_f32()
     }
+
+    #[inline]
+    pub fn will_update(&self) -> bool {
+        self.lag + self.previous.elapsed() >= self.interval
+    }
 }
