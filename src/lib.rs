@@ -11,7 +11,7 @@ pub mod update;
 
 //
 
-#[inline(always)]
+#[inline]
 pub fn as_async<F>(f: F)
 where
     F: Future<Output = ()> + 'static,
@@ -22,7 +22,7 @@ where
     pollster::block_on(f);
 }
 
-#[inline(always)]
+#[inline]
 pub fn init_log() {
     #[cfg(not(target_arch = "wasm32"))]
     {

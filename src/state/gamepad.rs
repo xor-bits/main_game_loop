@@ -55,6 +55,7 @@ impl Default for DeadZone {
 }
 
 impl GamepadState {
+    #[inline]
     pub fn new() -> Self {
         Self::default()
     }
@@ -62,81 +63,90 @@ impl GamepadState {
     pub fn event(&mut self, event: &Event) {
         self.inner.clear();
 
-        if let Event::UserEvent(CustomEvent::GamePadEvent(gilrs::Event { id, event, .. })) = event {
-            let gamepad = *id;
-            let deadzone = self.gamepads.entry(gamepad).or_default();
-            match *event {
-                EventType::ButtonPressed(button, _) => {
-                    let input = GamepadButtonInput { gamepad, button };
-                    self.inner.event(ElementState::Pressed, input);
-                }
-                EventType::ButtonReleased(button, _) => {
-                    let input = GamepadButtonInput { gamepad, button };
-                    self.inner.event(ElementState::Released, input);
-                }
-                EventType::ButtonChanged(button, val, _) => {
-                    let (deadzone, axis) = match button {
-                        GamepadButton::LeftTrigger2 => (deadzone.left, GamepadAxis::LeftZ),
-                        GamepadButton::RightTrigger2 => (deadzone.right, GamepadAxis::RightZ),
-                        _ => return,
-                    };
-
-                    let input = GamepadAxisInput { gamepad, axis };
-                    if val.abs() <= deadzone {
-                        self.axes.remove(&input);
-                    } else {
-                        self.axes.insert(input, val);
+        match event {
+            Event::UserEvent(CustomEvent::GamePadEvent(gilrs::Event { id, event, .. })) => {
+                let gamepad = *id;
+                let deadzone = self.gamepads.entry(gamepad).or_default();
+                match *event {
+                    EventType::ButtonPressed(button, _) => {
+                        let input = GamepadButtonInput { gamepad, button };
+                        self.inner.event(ElementState::Pressed, input);
                     }
-                }
-                EventType::AxisChanged(axis, val, _) => {
-                    let deadzone = match axis {
-                        GamepadAxis::LeftStickX => deadzone.left_stick.x,
-                        GamepadAxis::LeftStickY => deadzone.left_stick.y,
-                        GamepadAxis::LeftZ => deadzone.left,
-                        GamepadAxis::RightStickX => deadzone.right_stick.x,
-                        GamepadAxis::RightStickY => deadzone.right_stick.y,
-                        GamepadAxis::RightZ => deadzone.right,
-                        GamepadAxis::DPadX => deadzone.d_pad.x,
-                        GamepadAxis::DPadY => deadzone.d_pad.y,
-                        GamepadAxis::Unknown => return,
-                    };
-
-                    let input = GamepadAxisInput { gamepad, axis };
-                    if val.abs() <= deadzone {
-                        self.axes.remove(&input);
-                    } else {
-                        self.axes.insert(input, val);
+                    EventType::ButtonReleased(button, _) => {
+                        let input = GamepadButtonInput { gamepad, button };
+                        self.inner.event(ElementState::Released, input);
                     }
+                    EventType::ButtonChanged(button, val, _) => {
+                        let (deadzone, axis) = match button {
+                            GamepadButton::LeftTrigger2 => (deadzone.left, GamepadAxis::LeftZ),
+                            GamepadButton::RightTrigger2 => (deadzone.right, GamepadAxis::RightZ),
+                            _ => return,
+                        };
+
+                        let input = GamepadAxisInput { gamepad, axis };
+                        if val.abs() <= deadzone {
+                            self.axes.remove(&input);
+                        } else {
+                            self.axes.insert(input, val);
+                        }
+                    }
+                    EventType::AxisChanged(axis, val, _) => {
+                        let deadzone = match axis {
+                            GamepadAxis::LeftStickX => deadzone.left_stick.x,
+                            GamepadAxis::LeftStickY => deadzone.left_stick.y,
+                            GamepadAxis::LeftZ => deadzone.left,
+                            GamepadAxis::RightStickX => deadzone.right_stick.x,
+                            GamepadAxis::RightStickY => deadzone.right_stick.y,
+                            GamepadAxis::RightZ => deadzone.right,
+                            GamepadAxis::DPadX => deadzone.d_pad.x,
+                            GamepadAxis::DPadY => deadzone.d_pad.y,
+                            GamepadAxis::Unknown => return,
+                        };
+
+                        let input = GamepadAxisInput { gamepad, axis };
+                        if val.abs() <= deadzone {
+                            self.axes.remove(&input);
+                        } else {
+                            self.axes.insert(input, val);
+                        }
+                    }
+                    /* THIS MIGHT COME LATER THAN ACTUAL BUTTON EVENTS: EventType::Connected => {
+                        self.gamepads.insert(gamepad);
+                    } */
+                    EventType::Disconnected => {
+                        self.gamepads.remove(&gamepad);
+                    }
+                    _ => {}
                 }
-                /* THIS MIGHT COME LATER THAN ACTUAL BUTTON EVENTS: EventType::Connected => {
-                    self.gamepads.insert(gamepad);
-                } */
-                EventType::Disconnected => {
-                    self.gamepads.remove(&gamepad);
-                }
-                _ => {}
             }
+            Event::RedrawEventsCleared => self.inner.clear(),
+            _ => (),
         }
     }
 
+    #[inline]
     pub fn set_deadzone(&mut self, gamepad: Gamepad, deadzone: DeadZone) {
         if let Some(current) = self.gamepads.get_mut(&gamepad) {
             *current = deadzone;
         }
     }
 
+    #[inline]
     pub fn get_mut_deadzone(&mut self, gamepad: Gamepad) -> Option<&mut DeadZone> {
         self.gamepads.get_mut(&gamepad)
     }
 
+    #[inline]
     pub fn get_deadzone(&self, gamepad: Gamepad) -> Option<&DeadZone> {
         self.gamepads.get(&gamepad)
     }
 
+    #[inline]
     pub fn gamepads(&self) -> impl Iterator<Item = Gamepad> + '_ {
         self.gamepads.keys().copied()
     }
 
+    #[inline]
     pub fn axis_value(&self, code: GamepadAxisInput) -> f32 {
         self.axes.get(&code).copied().unwrap_or(0.0)
     }

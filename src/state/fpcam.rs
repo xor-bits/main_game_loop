@@ -32,35 +32,42 @@ impl Default for FPCam {
 }
 
 impl FPCam {
+    #[inline]
     pub fn new() -> Self {
         Self::default()
     }
 
+    #[inline]
     pub fn with_dir(mut self, dir: Vec2) -> Self {
         self.dir = Self::clamp2(dir);
         self
     }
 
+    #[inline]
     pub fn with_sensitivity(mut self, sensitivity: Vec2) -> Self {
         self.sensitivity = sensitivity;
         self
     }
 
+    #[inline]
     pub fn with_fov(mut self, fov: f32) -> Self {
         self.fov = fov;
         self
     }
 
+    #[inline]
     pub fn with_near(mut self, near: f32) -> Self {
         self.near = near;
         self
     }
 
+    #[inline]
     pub fn with_far(mut self, far: f32) -> Self {
         self.far = far;
         self
     }
 
+    #[inline]
     pub fn get_dir(&self) -> Vec2 {
         self.dir
     }
@@ -78,11 +85,13 @@ impl FPCam {
             * Mat4::look_at_rh(eye, center, up)
     }
 
+    #[inline]
     pub fn update(&mut self, motion: Vec2) {
         self.dir += self.sensitivity * motion;
         self.clamp();
     }
 
+    #[inline]
     pub fn event(&mut self, event: &Event) {
         if let Event::DeviceEvent {
             event: DeviceEvent::MouseMotion { delta: (x, y) },

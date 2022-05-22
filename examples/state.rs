@@ -56,10 +56,9 @@ impl Runnable for App {
 
     fn draw(&mut self) {
         println!(
-            "Window state: {:?}\nKeyboard state: {:?}\nGamepad state: {:?}\nFPCam state: {:?}\n\n",
+            "Window state: {:?}\nKeyboard state: {:#?}\nGamepad state: {:?}\nFPCam state: {:?}\n\n",
             self.window, self.keyboard, self.gamepad, self.fpcam
         );
-        self.keyboard.clear();
         sleep(Duration::from_millis(10));
     }
 }

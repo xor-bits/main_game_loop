@@ -18,21 +18,24 @@ impl KeyboardState {
     }
 
     pub fn event(&mut self, event: &Event) {
-        if let Event::WindowEvent {
-            event:
-                WindowEvent::KeyboardInput {
-                    input:
-                        KeyboardInput {
-                            state,
-                            virtual_keycode: Some(virtual_keycode),
-                            ..
-                        },
-                    ..
-                },
-            ..
-        } = event
-        {
-            self.inner.event(*state, *virtual_keycode);
+        match event {
+            Event::WindowEvent {
+                event:
+                    WindowEvent::KeyboardInput {
+                        input:
+                            KeyboardInput {
+                                state,
+                                virtual_keycode: Some(virtual_keycode),
+                                ..
+                            },
+                        ..
+                    },
+                ..
+            } => {
+                self.inner.event(*state, *virtual_keycode);
+            }
+            Event::RedrawEventsCleared => self.inner.clear(),
+            _ => (),
         }
     }
 }

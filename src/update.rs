@@ -73,7 +73,7 @@ impl UpdateLoop {
     ///     draw_quad(position);
     /// }
     /// ```
-    #[inline(always)]
+    #[inline]
     pub fn update<F>(&mut self, mut f: F) -> f32
     where
         F: FnMut(),

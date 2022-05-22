@@ -32,7 +32,7 @@ pub struct EventLoop {
 //
 
 impl EventLoop {
-    #[inline(always)]
+    #[inline]
     pub fn new() -> Self {
         Self::default()
     }
@@ -40,7 +40,7 @@ impl EventLoop {
     /// Main winit event thread
     ///
     /// has to be called from the main thread
-    #[inline(always)]
+    #[inline]
     pub fn run<F>(self, mut event_handler: F) -> !
     where
         F: FnMut(Event, &EventLoopTarget, &mut ControlFlow) + 'static,
@@ -55,16 +55,17 @@ impl EventLoop {
     /// Main winit event thread
     ///
     /// has to be called from the main thread
-    #[inline(always)]
+    #[inline]
     pub fn runnable<A>(self, mut runnable: A) -> !
     where
         A: Runnable + 'static,
     {
         self.run(move |e, t, c| {
-            match e {
-                Event::RedrawEventsCleared => runnable.draw(),
-                e => runnable.event(e, t, c),
-            };
+            if let Event::RedrawEventsCleared = &e {
+                runnable.draw();
+            }
+
+            runnable.event(e, t, c);
         })
     }
 
