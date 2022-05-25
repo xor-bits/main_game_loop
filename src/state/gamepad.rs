@@ -73,9 +73,8 @@ impl GamepadState {
     }
 
     pub fn event(&mut self, event: &Event) {
-        self.inner.clear();
-
         match event {
+            // gamepad events
             Event::UserEvent(CustomEvent::GamePadEvent(gilrs::Event { id, event, .. })) => {
                 let gamepad = *id;
                 let deadzone = self.gamepads.entry(gamepad).or_default();
@@ -131,8 +130,11 @@ impl GamepadState {
                     _ => {}
                 }
             }
+
+            // auto clear event
             Event::RedrawEventsCleared if self.auto_clear => self.inner.clear(),
-            _ => (),
+
+            _ => {}
         }
     }
 

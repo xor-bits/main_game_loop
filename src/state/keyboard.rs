@@ -32,6 +32,7 @@ impl KeyboardState {
 
     pub fn event(&mut self, event: &Event) {
         match event {
+            // kb events
             Event::WindowEvent {
                 event:
                     WindowEvent::KeyboardInput {
@@ -47,8 +48,11 @@ impl KeyboardState {
             } => {
                 self.inner.event(*state, *virtual_keycode);
             }
+
+            // auto clear event
             Event::RedrawEventsCleared if self.auto_clear => self.inner.clear(),
-            _ => (),
+
+            _ => {}
         }
     }
 }
