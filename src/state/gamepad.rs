@@ -164,6 +164,12 @@ impl GamepadState {
     pub fn axis_value(&self, code: GamepadAxisInput) -> f32 {
         self.axes.get(&code).copied().unwrap_or(0.0)
     }
+
+    pub fn axis_value_first(&self, axis: GamepadAxis) -> Option<f32> {
+        self.gamepads()
+            .next()
+            .map(|gamepad| self.axis_value(GamepadAxisInput { gamepad, axis }))
+    }
 }
 
 impl Deref for GamepadState {
