@@ -170,6 +170,24 @@ impl GamepadState {
             .next()
             .map(|gamepad| self.axis_value(GamepadAxisInput { gamepad, axis }))
     }
+
+    pub fn pressed_first(&self, button: GamepadButton) -> Option<bool> {
+        self.gamepads()
+            .next()
+            .map(|gamepad| self.pressed(GamepadButtonInput { gamepad, button }))
+    }
+
+    pub fn just_pressed_first(&self, button: GamepadButton) -> Option<bool> {
+        self.gamepads()
+            .next()
+            .map(|gamepad| self.just_pressed(GamepadButtonInput { gamepad, button }))
+    }
+
+    pub fn just_released_first(&self, button: GamepadButton) -> Option<bool> {
+        self.gamepads()
+            .next()
+            .map(|gamepad| self.just_released(GamepadButtonInput { gamepad, button }))
+    }
 }
 
 impl Deref for GamepadState {
