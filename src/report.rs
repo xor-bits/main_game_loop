@@ -71,39 +71,39 @@ impl Reporter {
         self.report_interval
     }
 
-    pub fn report_all<const COUNT: usize>(
-        label: &str,
-        reporters: [(&'static str, &mut Self); COUNT],
-    ) -> String {
+    pub fn report_all<'a, I>(label: &str, reporters: I) -> String
+    where
+        I: IntoIterator<Item = (&'static str, &'a mut Self)>,
+    {
         #[cfg(debug_assertions)]
         const DEBUG: &str = "debug build";
         #[cfg(not(debug_assertions))]
         const DEBUG: &str = "release build";
 
+        let reporters: Vec<_> = reporters
+            .into_iter()
+            .map(|(label, reporter)| {
+                reporter.reset();
+                (label, reporter.last_string())
+            })
+            .collect();
+
         let max_label_width = reporters
             .iter()
-            .map(|(label, reporter)| label.len() + reporter.last_string().1.len())
+            .map(|(label, (_, time_per))| label.len() + time_per.len())
             .max()
             .unwrap_or(0)
             .max(7);
         let padding = " ".repeat(max_label_width - 7);
         let first = format!("Report {label} ({DEBUG})\n{padding}per second @ time per\n");
 
-        let result = Some(first)
+        Some(first)
             .into_iter()
-            .chain(reporters.iter().map(|(label, reporter)| {
-                let (int, per_sec) = reporter.last_string();
+            .chain(reporters.iter().map(|(label, (int, per_sec))| {
                 let padding = " ".repeat(max_label_width - label.len() - per_sec.len() + 1);
                 format!("{label}: {padding}{per_sec} @ {int}\n")
             }))
-            .collect();
-
-        // reset all
-        for (_, reporter) in reporters.into_iter() {
-            reporter.reset();
-        }
-
-        result
+            .collect()
     }
 
     pub fn reset(&mut self) {
