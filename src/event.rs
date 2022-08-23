@@ -1,7 +1,10 @@
 use std::ops::Deref;
 use winit::{
     error::OsError,
-    event_loop::{ControlFlow, EventLoop as WinitEventLoop, EventLoopProxy, EventLoopWindowTarget},
+    event_loop::{
+        ControlFlow, EventLoop as WinitEventLoop, EventLoopBuilder as WinitEventLoopBuilder,
+        EventLoopProxy, EventLoopWindowTarget,
+    },
     window::Window,
 };
 
@@ -107,7 +110,7 @@ impl EventLoop {
 impl Default for EventLoop {
     fn default() -> Self {
         Self {
-            event_loop: WinitEventLoop::with_user_event(),
+            event_loop: WinitEventLoopBuilder::with_user_event().build(),
         }
     }
 }
