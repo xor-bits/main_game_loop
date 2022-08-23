@@ -1,6 +1,6 @@
 [package]
 name = "main_game_loop"
-version = "0.4.5"
+version = "0.4.6"
 edition = "2021"
 description = "A game loop with event handling"
 license = "MIT"
@@ -11,7 +11,7 @@ documentation = "https://docs.rs/main_game_loop"
 
 [dependencies]
 instant = "0.1"
-winit = "0.26"
+winit = "0.27"
 log = "0.4"
 glam = "0.21"
 rustc-hash = "1.1"
