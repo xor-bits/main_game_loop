@@ -2,10 +2,11 @@
 name = "main_game_loop"
 version = "0.5.0"
 edition = "2021"
-description = "A game loop with event handling"
+description = "A tool collection for building a winit game loop"
 license = "MIT"
 repository = "https://github.com/Overpeek/main_game_loop"
 documentation = "https://docs.rs/main_game_loop"
+categories = ["game-development"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
