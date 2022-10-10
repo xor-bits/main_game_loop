@@ -1,6 +1,6 @@
 [package]
 name = "main_game_loop"
-version = "0.4.6"
+version = "0.5.0"
 edition = "2021"
 description = "A game loop with event handling"
 license = "MIT"
@@ -22,18 +22,4 @@ gilrs = "0.9"
 
 [dev-dependencies]
 env_logger = "0.9"
-
-
-[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-# syncronous await operator
-pollster = "0.2"
-# logging
-env_logger = "0.9"
-
-[target.'cfg(target_arch = "wasm32")'.dependencies]
-# futures for wasm
-wasm-bindgen-futures = "0.4"
-# logging
-console_log = { version = "0.2", features = ["color"] }
-# wasm panic hook
-console_error_panic_hook = "0.1"
+tokio = { version = "1.21.1", features = ["rt-multi-thread", "macros"] }

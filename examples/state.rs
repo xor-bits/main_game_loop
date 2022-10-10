@@ -1,13 +1,12 @@
-use std::thread::sleep;
-
 use instant::Duration;
 use main_game_loop::{
     event::{Event, EventLoopTarget},
-    main_app,
     prelude::{FPCam, KeyboardState, WindowState},
+    run_app,
     runnable::Runnable,
     state::gamepad::GamepadState,
 };
+use std::thread::sleep;
 use winit::{event_loop::ControlFlow, window::Window};
 
 //
@@ -59,8 +58,12 @@ impl Runnable for App {
             "Window state: {:?}\nKeyboard state: {:#?}\nGamepad state: {:?}\nFPCam state: {:?}\n\n",
             self.window, self.keyboard, self.gamepad, self.fpcam
         );
+        self.keyboard.clear();
+        self.gamepad.clear();
         sleep(Duration::from_millis(10));
     }
 }
 
-main_app!(App);
+fn main() {
+    run_app!(App);
+}

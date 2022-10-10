@@ -30,9 +30,7 @@ impl App {
             update_loop,
         }
     }
-}
 
-impl Runnable for App {
     fn event(&mut self, event: Event, _: &EventLoopTarget, control: &mut ControlFlow) {
         self.ws.event(&event);
 
@@ -50,5 +48,43 @@ impl Runnable for App {
     }
 }
 
-main_app!(App);
+fn main() {
+    run_app!(App);
+}
 ```
+
+### Example usage with different init, event and draw functions
+
+```rust
+use main_game_loop::prelude::*;
+
+struct App {
+    // ...
+}
+
+async fn init(target: &EventLoopTarget) -> App {
+    // init
+
+    App {
+        // ..
+    }
+}
+
+impl App {
+    fn draw(&mut self) {
+        // draw
+    }
+}
+
+#[tokio::main]
+async fn main() {
+    run_app!(
+        async init,
+        |_, _, _, _| {
+            // events
+        },
+        App::draw
+    );
+}
+```
+

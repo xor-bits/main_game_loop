@@ -1,7 +1,7 @@
 use main_game_loop::{
     event::{Event, EventLoopTarget},
-    main_app,
     report::Reporter,
+    run_app,
     runnable::Runnable,
     state::window::WindowState,
     update::{UpdateLoop, UpdateRate},
@@ -80,4 +80,7 @@ impl Runnable for App {
     }
 }
 
-main_app!(App);
+fn main() {
+    env_logger::init();
+    run_app!(App);
+}

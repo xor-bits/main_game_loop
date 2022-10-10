@@ -1,7 +1,13 @@
 #![forbid(unsafe_code)]
 
 //
-use std::future::Future;
+
+pub use gilrs;
+pub use glam;
+pub use instant;
+pub use log;
+pub use rustc_hash;
+pub use winit;
 
 //
 
@@ -14,53 +20,34 @@ pub mod update;
 
 //
 
-#[inline]
-pub fn as_async<F>(f: F)
-where
-    F: Future<Output = ()> + 'static,
-{
-    #[cfg(target_arch = "wasm32")]
-    wasm_bindgen_futures::spawn_local(f);
-    #[cfg(not(target_arch = "wasm32"))]
-    pollster::block_on(f);
+pub fn should_draw(event: &prelude::Event) -> bool {
+    matches!(event, prelude::Event::RedrawEventsCleared)
 }
-
-#[inline]
-pub fn init_log() {
-    #[cfg(not(target_arch = "wasm32"))]
-    {
-        env_logger::init();
-    }
-    #[cfg(target_arch = "wasm32")]
-    {
-        std::panic::set_hook(Box::new(console_error_panic_hook::hook));
-        console_log::init_with_level(log::Level::Debug);
-    }
-}
-
-//
 
 #[macro_export]
-macro_rules! main_app {
-    ($app:tt) => {
-        fn main() {
-            main_game_loop::init_log();
-            let target = main_game_loop::event::EventLoop::new();
-            let app = $app::init(&target);
-            target.runnable(app);
-        }
+macro_rules! run_app {
+    (async $init:expr, $event:expr, $draw:expr) => {
+        run_app! { => { $init }, { .await }, { $event }, { $draw } }
     };
 
-    (async $app:tt) => {
-        async fn __main_run() {
-            let target = main_game_loop::event::EventLoop::new();
-            let app = $app::init(&target).await;
-            target.runnable(app);
-        }
+    ($init:expr, $event:expr, $draw:expr) => {
+        run_app! { => { $init }, {}, { $event }, { $draw } }
+    };
 
-        fn main() {
-            main_game_loop::init_log();
-            main_game_loop::as_async(__main_run());
-        }
+    ($app:ident) => {
+        run_app! { => { $app::init }, {}, { $app::event }, { $app::draw } }
+    };
+
+    (=> { $($init:tt)* }, { $($init_op:tt)* }, { $($event:tt)* }, { $($draw:expr)* }) => {
+        let target = main_game_loop::event::EventLoop::new();
+        let mut app = ($($init)*)(&target)$($init_op)*;
+
+        target.run(move |e, t, c| {
+            if main_game_loop::should_draw(&e) {
+                ($($draw)*)(&mut app);
+            }
+
+            ($($event)*)(&mut app, e, t, c);
+        })
     };
 }
