@@ -107,13 +107,13 @@ impl Reporter {
     }
 
     pub fn reset(&mut self) {
-        let avg = self.elapsed / self.count;
+        let avg = self.elapsed.checked_div(self.count);
         let fps = self.count as f64 / self.report_interval.as_secs_f64();
 
         self.count = 0;
         self.elapsed = Duration::default();
         self.report_timer = Instant::now();
-        self.last_interval = Some(avg);
+        self.last_interval = avg;
         self.last_per_second = Some(fps);
     }
 
