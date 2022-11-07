@@ -14,11 +14,11 @@ categories = ["game-development"]
 instant = "0.1"
 winit = "0.27"
 log = "0.4"
-glam = "0.21"
+glam = "0.22"
 rustc-hash = "1.1"
 
 # sdl2 = "0.35"
-gilrs = "0.9"
+gilrs = "0.10"
 
 
 [dev-dependencies]

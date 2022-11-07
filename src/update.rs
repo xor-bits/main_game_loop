@@ -78,19 +78,13 @@ impl UpdateLoop {
     where
         F: FnMut(),
     {
-        // main game loop source:
-        //  - https://gameprogrammingpatterns.com/game-loop.html
-        let elapsed = self.previous.elapsed();
-        self.previous = Instant::now();
-        self.lag += elapsed;
+        let updates = self.begin_updates();
+        (0..updates.count()).for_each(|_| f());
+        updates.finish(self)
+    }
 
-        // updates
-        while self.lag >= self.interval {
-            f();
-            self.lag -= self.interval;
-        }
-
-        self.delta()
+    pub fn begin_updates(&mut self) -> UpdateGuard {
+        UpdateGuard::new(self)
     }
 
     #[inline]
@@ -101,5 +95,56 @@ impl UpdateLoop {
     #[inline]
     pub fn will_update(&self) -> bool {
         self.lag + self.previous.elapsed() >= self.interval
+    }
+}
+
+/// update count calculator
+///
+/// ´´´no_run
+/// let updates = update_loop.begin_updates();
+/// for _ in 0..updates.count() {
+///     update();
+/// }
+/// // dont forget to finish!
+/// updates.finish(&mut update_loop)
+/// ´´´
+pub struct UpdateGuard {
+    previous: Instant,
+    elapsed: Duration,
+    count: u32,
+    // lag: Duration,
+    // interval: Duration,
+}
+
+// main game loop source:
+//  - https://gameprogrammingpatterns.com/game-loop.html
+impl UpdateGuard {
+    fn new(l: &UpdateLoop) -> Self {
+        let elapsed = l.previous.elapsed();
+        let previous = Instant::now();
+        let lag = l.lag + elapsed;
+
+        let precise = lag.as_secs_f32() / l.interval.as_secs_f32();
+        let count = precise.floor() as u32;
+
+        Self {
+            previous,
+            elapsed,
+            count,
+        }
+    }
+
+    /// returns the number of times to update
+    pub fn count(&self) -> u32 {
+        self.count
+    }
+
+    /// update the update loop
+    pub fn finish(self, l: &mut UpdateLoop) -> f32 {
+        l.previous = self.previous;
+        l.lag += self.elapsed;
+
+        l.lag -= l.interval * self.count() as u32;
+        l.delta()
     }
 }
