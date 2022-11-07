@@ -1,6 +1,6 @@
 [package]
 name = "main_game_loop"
-version = "0.5.0"
+version = "0.6.0"
 edition = "2021"
 description = "A tool collection for building a winit game loop"
 license = "MIT"
